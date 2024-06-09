@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_VERSION: 1.78.0
 
 permissions:
   contents: read
@@ -30,7 +31,7 @@ jobs:
             static.rust-lang.org:443
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
       - run: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain=${{ env.RUST_VERSION }} -y
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup default stable
           rustup component add rustfmt
