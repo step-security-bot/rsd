@@ -48,7 +48,20 @@ jobs:
           set -euo pipefail
           echo "hashes=$(sha256sum ./rsd | base64 -w0)" >> "$GITHUB_OUTPUT"
       - name: Generate SBOM via Syft
+        id: sbom
         uses: anchore/sbom-action@e8d2a6937ecead383dfe75190d104edd1f9c5751
+        with:
+          output-file: ${{ github.workspace }}/rsd-sbom.spdx
+      - name: Generate SBOM signature
+        id: sbom_signature
+        run: |
+          set -euo pipefail
+          echo "sbom_signature=$(sha256sum ${{ github.workspace }}/rsd-sbom.spdx | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Upload SBOM signature to release
+        run: |
+          set -euo pipefail
+          echo ${{ steps.sbom_signature.outputs.sbom_signature }} > rsd-sbom.sig
+          gh release upload ${{ github.ref_name }} rsd-sbom.sig
   provenance:
     needs:
       - build
