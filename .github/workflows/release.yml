@@ -1,0 +1,58 @@
+name: rsd release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  actions: read
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6
+        with:
+          disable-sudo: true
+          egress-policy: block
+          allowed-endpoints: >
+            azure.archive.ubuntu.com:80
+            esm.ubuntu.com:443
+            github.com:443
+            motd.ubuntu.com:443
+            objects.githubusercontent.com:443
+            packages.microsoft.com:443
+            raw.githubusercontent.com:443
+            sh.rustup.rs:443
+            static.rust-lang.org:443
+            uploads.github.com:443
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - run: |
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup default stable
+      - name: Build using cargo
+        run: |
+          cargo build --release
+          cp target/release/rsd .
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+          echo "hashes=$(sha256sum ./rsd | base64 -w0)" >> "$GITHUB_OUTPUT"
+      - name: Generate SBOM via Syft
+        uses: anchore/sbom-action@e8d2a6937ecead383dfe75190d104edd1f9c5751
+  provenance:
+    needs:
+      - build
+    # https://github.com/slsa-framework/slsa-github-generator/issues/722
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true
