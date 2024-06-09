@@ -1,6 +1,6 @@
 # rsd
 
-`rsd` Rust implemention of something resembling `xxd -e -l 64`. Its functionality is limited to looking at the headers of ELF binaries and outputting the details in a mostly- human-readable format.
+`rsd` Rust implementation of something resembling `xxd -e -l 64`. Its functionality is limited to looking at the headers of ELF binaries and outputting the details in a mostly- human-readable format.
 
 ## Why?
 
@@ -145,4 +145,4 @@ Running `rsd` from MacOS will result in this:
 
 Maybe -- I want to start automating various things in whatever language seems right. 
 
-Analyizing Mach-O binaries (i.e., MacOS binaries) doesn't seem to be as common but would be something to support in a future PR.
+Analyzing Mach-O binaries (i.e., MacOS binaries) doesn't seem to be as common but would be something to support in a future PR.
