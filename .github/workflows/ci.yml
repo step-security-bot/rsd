@@ -1,0 +1,41 @@
+name: rsd CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  rust-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            azure.archive.ubuntu.com:80
+            esm.ubuntu.com:443
+            github.com:443
+            motd.ubuntu.com:443
+            packages.microsoft.com:443
+            sh.rustup.rs:443
+            static.rust-lang.org:443
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup default stable
+          rustup component add rustfmt
+      - name: Run Checks
+        run: |
+          cargo fmt --all -- --check
+          cargo build --all --release

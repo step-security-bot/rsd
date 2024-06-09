@@ -1,0 +1,40 @@
+name: rsd release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  actions: read
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - uses: step-security/harden-runner@17d0e2bd7d51742c71671bd19fa12bdc9d40a3d6
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - name: Build using cargo
+        run: |
+          cargo build --release
+          cp target/release/rsd .
+      - name: Generate subject
+        id: hash
+        run: |
+          set -euo pipefail
+          echo "hashes=$(sha256sum ./rsd | base64 -w0)" >> "$GITHUB_OUTPUT"
+  provenance:
+    needs:
+      - build
+    # https://github.com/slsa-framework/slsa-github-generator/issues/722
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true
