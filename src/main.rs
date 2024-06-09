@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::process;
+use std::fmt::Write;
 
 mod display;
 
@@ -30,10 +31,10 @@ fn main() {
     }
 
     let magic = &header[..4];
-    let magic_string = magic
-        .iter()
-        .map(|b| format!("{:02X}", b))
-        .collect::<String>();
+    let magic_string = magic.iter().fold(String::new(), |mut result, b| {
+        let _ = write!(result, "{b:02X}");
+        result
+    });
 
     // Check if the file is an ELF file
     if magic != ELF_MAGIC {
@@ -311,9 +312,9 @@ fn get_segment_type(segment_type: u32) -> &'static str {
 fn get_segment_flags(segment_flags: u32) -> String {
     let mut flags = String::new();
     match segment_flags {
-        0x01 => flags.push_str("R"),
-        0x02 => flags.push_str("W"),
-        0x04 => flags.push_str("X"),
+        0x01 => flags.push('R'),
+        0x02 => flags.push('W'),
+        0x04 => flags.push('X'),
         _ => flags.push_str("Unknown"),
     }
     flags
@@ -367,11 +368,9 @@ fn get_data_encoding(header: &[u8]) -> (String, u8) {
 }
 
 fn bits_to_u16(bits: &[u8; 2]) -> u16 {
-    let value = u16::from_le_bytes(*bits);
-    value
+    u16::from_le_bytes(*bits)
 }
 
 fn get_elf_version(header: &[u8]) -> u8 {
-    let elf_version = header[0x06];
-    elf_version
+    header[0x06]
 }
