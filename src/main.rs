@@ -1,8 +1,8 @@
 use std::env;
+use std::fmt::Write;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::process;
-use std::fmt::Write;
 
 mod display;
 
